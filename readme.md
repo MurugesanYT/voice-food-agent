@@ -2,28 +2,28 @@
 
 > Talk to order. No tapping. No scrolling. Just speak.
 
-**VoiceOrder** is a hands-free food ordering agent powered by **NVIDIA Nemotron** (via NVIDIA NIM) and the **Swiggy MCP API**. Users simply speak what they want — the agent understands, confirms, and places the order on Swiggy on their behalf.
+**VoiceOrder** is a hands-free food ordering agent powered by **NVIDIA Nemotron 3** — a native live conversation model via NVIDIA NIM — and the **Swiggy MCP API**. Users simply speak what they want — Nemotron 3 listens, understands, responds in natural speech, and places the order on Swiggy on their behalf. No separate STT or TTS services needed.
 
 ---
 
 ## 🧠 How It Works
 
 ```
-User speaks → STT (Whisper) → Nemotron LLM Agent → Swiggy MCP API → Order Placed → TTS response
+User speaks → Web Speech API (mic capture) → Nemotron 3 (live conversation) → Swiggy MCP API → Order Placed → Nemotron 3 speaks back
 ```
 
-1. **Voice Input** — Captured via browser mic or mobile device
-2. **Speech-to-Text** — Transcribed using the browser-native **Web Speech API**
-3. **AI Agent (Nemotron)** — NVIDIA NIM hosts `nvidia/llama-3.1-nemotron-70b-instruct`, which handles:
-   - Intent parsing ("I want biryani from a good place nearby")
-   - Multi-turn conversation (clarifying restaurant, quantity, address)
-   - Tool calling into Swiggy MCP API
-4. **Swiggy MCP API** — Used to:
+1. **Voice Input** — Captured via browser mic using the **Web Speech API**
+2. **Live Conversation (Nemotron 3)** — NVIDIA's native live conversation model handles everything in one place:
+   - Listens and understands user speech in real-time
+   - Parses intent ("I want biryani from a good place nearby")
+   - Manages multi-turn conversation (clarifying restaurant, quantity, address)
+   - Calls Swiggy MCP tools to search, select, and order
+   - Responds back in **natural spoken voice natively** — no TTS service needed
+3. **Swiggy MCP API** — Used to:
    - Search nearby restaurants
    - Browse menus
    - Add items to cart
    - Place and track orders
-5. **Text-to-Speech** — Agent responds back in voice, confirming order details
 
 ---
 
@@ -34,22 +34,18 @@ User speaks → STT (Whisper) → Nemotron LLM Agent → Swiggy MCP API → Orde
 │                     User Interface                       │
 │         (Web / Mobile — mic input + audio output)        │
 └────────────────────────┬────────────────────────────────┘
-                         │ audio stream
+                         │ mic audio (Web Speech API)
                          ▼
 ┌─────────────────────────────────────────────────────────┐
-│           Speech-to-Text (Web Speech API — browser-native) │
-│              Text-to-Speech (ElevenLabs / gTTS)          │
-└────────────────────────┬────────────────────────────────┘
-                         │ text
-                         ▼
-┌─────────────────────────────────────────────────────────┐
-│         NVIDIA NIM — Nemotron Agent Core                 │
-│   Model: nvidia/llama-3.1-nemotron-70b-instruct          │
+│         NVIDIA NIM — Nemotron 3                          │
+│         Native Live Conversation Model                   │
 │                                                          │
+│   • Listens & understands speech in real-time            │
 │   • Parses user intent                                   │
 │   • Manages conversation state                           │
 │   • Calls Swiggy MCP tools                              │
-│   • Confirms order before placing                        │
+│   • Responds in natural spoken voice natively            │
+│   (No separate STT or TTS needed)                        │
 └────────────────────────┬────────────────────────────────┘
                          │ MCP tool calls
                          ▼
@@ -71,9 +67,8 @@ User speaks → STT (Whisper) → Nemotron LLM Agent → Swiggy MCP API → Orde
 
 | Layer | Technology |
 |---|---|
-| Voice Agent LLM | NVIDIA Nemotron via [NVIDIA NIM](https://build.nvidia.com) |
-| Speech-to-Text | Browser-native [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) |
-| Text-to-Speech | ElevenLabs / gTTS |
+| Live Voice Agent | [NVIDIA Nemotron 3](https://build.nvidia.com) — native live conversation model via NVIDIA NIM |
+| Mic Capture | Browser-native [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) |
 | Food Ordering API | Swiggy MCP API (Food) |
 | Backend | Python (FastAPI) |
 | Frontend | React + Web Speech API |
@@ -109,9 +104,7 @@ Agent:   "Order placed! Your biryani will arrive in about 35 minutes.
 voice-food-agent/
 ├── backend/
 │   ├── main.py               # FastAPI server
-│   ├── agent.py              # Nemotron NIM agent logic
-│   ├── stt.py                # Web Speech API bridge (via WebSocket)
-│   ├── tts.py                # Text-to-speech output
+│   ├── agent.py              # Nemotron 3 live conversation agent
 │   └── swiggy_tools.py       # Swiggy MCP tool definitions
 ├── frontend/
 │   ├── src/
@@ -136,9 +129,6 @@ NVIDIA_API_KEY=your_nvidia_nim_api_key
 SWIGGY_CLIENT_ID=your_swiggy_client_id
 SWIGGY_CLIENT_SECRET=your_swiggy_client_secret
 SWIGGY_REDIRECT_URI=http://localhost:3000/auth/callback
-
-# ElevenLabs (optional TTS)
-ELEVENLABS_API_KEY=your_elevenlabs_key
 ```
 
 ---
